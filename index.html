@@ -1,0 +1,74 @@
+<head>
+    <title>Hot NFT collections POC</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+
+    <style>
+        table {
+            border: 1px solid #000;
+        }
+
+        th, td {
+            padding: 5px;
+            /*border: 1px solid #000;*/
+        }
+
+        tr:not(:last-child) {
+            border-bottom: 1px solid #000;
+        }
+    </style>
+
+    <script>
+        const socket = io("http://localhost:3002");
+
+        socket.on('connect', function () {
+            console.log('Connected');
+        });
+
+        socket.on('disconnect', function () {
+            console.log('Disconnected');
+        });
+
+        socket.on("hot_collections_5min", (args) => {
+            updateTableBody(JSON.parse(args));
+        });
+
+        function updateTableBody(data) {
+            const $newTbody = $('<tbody></tbody>'); // Create a new tbody element
+            data.items.forEach((item) => {
+                const newRow = `<tr style="${Number(item.sales_count > 10) ? 'background-color: #ccc' : ''}">
+                        <td>${item.contract}</td>
+                        <td>${item.chain}</td>
+                        <td>${item.collection || '-'}</td>
+                        <td>${Number(item.volume).toFixed(2)}</td>
+                        <td>${Number(item.avg_price).toFixed(2)}</td>
+                        <td>${item.sales_count}</td>
+                        <td>${item.sellers} / ${item.buyers}</td>
+                    </tr>`;
+                $newTbody.append(newRow); // Append new rows to the new tbody
+            });
+            $('tbody').replaceWith($newTbody); // Replace existing tbody with the new one
+            $('span#last_update_at').text(data.updatedAt);
+        }
+    </script>
+</head>
+<body>
+<h1>Hot NFT collections in the last 5 minutes</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Contract</th>
+        <th>Chain</th>
+        <th>Collection</th>
+        <th>Volume</th>
+        <th>Avg price</th>
+        <th>Sales count</th>
+        <th>Sellers / Buyers</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+Last updated at: <span id="last_update_at">never</span>
+</body>
